@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self';"
+    >
+    <title>Chord Chart Editor</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Worship ministry</p>
+          <h1>Chord Chart Editor</h1>
+        </div>
+        <span id="app-version" class="version">Loading…</span>
+      </header>
+
+      <p id="status" role="status" aria-live="polite">Loading songs…</p>
+      <section id="library-view" aria-labelledby="library-heading" class="library"></section>
+      <section id="editor-view" aria-labelledby="editor-heading" class="editor" hidden></section>
+      <div id="overlay-root"></div>
+
+      <dialog id="unsaved-dialog" aria-labelledby="unsaved-title">
+        <form method="dialog" class="dialog-content">
+          <h2 id="unsaved-title">Unsaved changes</h2>
+          <p>This song has changes that have not been saved.</p>
+          <div class="dialog-actions">
+            <button type="submit" value="save">Save</button>
+            <button type="submit" value="discard" class="danger-button">Discard</button>
+            <button type="submit" value="cancel" class="secondary-button">Keep editing</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="import-dialog" aria-labelledby="import-title">
+        <form method="dialog" class="dialog-content" id="import-form">
+          <h2 id="import-title">Review imported chart</h2>
+          <p id="import-source"></p>
+          <label class="form-field">
+            <span>Song title</span>
+            <input id="import-song-title" maxlength="200" required>
+          </label>
+          <p id="import-summary"></p>
+          <ul id="import-warnings" class="import-warnings"></ul>
+          <pre id="import-preview" class="import-preview"></pre>
+          <div class="dialog-actions">
+            <button type="submit" value="import">Import song</button>
+            <button type="submit" value="cancel" class="secondary-button">Cancel</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="output-options-dialog" aria-labelledby="output-title">
+        <form method="dialog" class="dialog-content" id="output-options-form">
+          <h2 id="output-title">Export options</h2>
+          <label class="form-field">
+            <span>Export key (leave blank to keep the current key)</span>
+            <input id="output-key" maxlength="4" pattern="[A-Ga-g](#|b)?m?" title="Enter a key such as C, Bb, or F#m.">
+          </label>
+          <label class="form-field">
+            <span>Page size</span>
+            <select id="output-page-size">
+              <option value="A4">A4</option>
+              <option value="Letter">Letter</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span>Orientation</span>
+            <select id="output-orientation">
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span>Font size (8–24 pt)</span>
+            <input id="output-font-size" type="number" min="8" max="24" step="1" value="12">
+          </label>
+          <label class="checkbox-field">
+            <input id="output-include-metadata" type="checkbox" checked>
+            Include song metadata and notes in print output
+          </label>
+          <div class="dialog-actions">
+            <button type="submit" value="export-text">Export text</button>
+            <button type="submit" value="export-pdf">Export PDF</button>
+            <button type="submit" value="print">Print</button>
+            <button type="submit" value="cancel" class="secondary-button">Cancel</button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+  </body>
+</html>

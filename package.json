@@ -1,0 +1,18 @@
+{
+  "name": "worship-chord-chart-editor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lightweight desktop editor for worship ministry chord charts.",
+  "type": "module",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0"
+  },
+  "allowScripts": {
+    "electron@39.8.10": true
+  }
+}
