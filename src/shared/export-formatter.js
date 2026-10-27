@@ -35,22 +35,55 @@ export function songInKey(input, targetKey) {
   return new Song(transposed).toJSON();
 }
 
-function chordForWord(word, warnings, sectionName, lineIndex) {
-  const syllableChords = word.syllables.map((syllable) => syllable.chord).filter(Boolean);
-  const distinct = [...new Set(syllableChords)];
-  if (distinct.length > 1) {
-    warnings.push(`Section "${sectionName}", line ${lineIndex}: multiple syllable chords on "${word.text}" are approximated by the first syllable chord.`);
+function chordPlacements(word, warnings, sectionName, lineIndex) {
+  const placements = [];
+  if (word.chord) {
+    placements.push({ column: 0, chord: word.chord });
   }
-  return word.chord || syllableChords[0] || '';
+
+  const syllableText = word.syllables.map((syllable) => syllable.text).join('');
+  const hasValidSyllables = syllableText === word.text;
+  if (word.syllables.length && !hasValidSyllables) {
+    warnings.push(`Section "${sectionName}", line ${lineIndex}: syllables on "${word.text}" do not match the word and their chords are placed at the word start.`);
+  }
+
+  let column = 0;
+  for (const syllable of word.syllables) {
+    if (syllable.chord) {
+      placements.push({
+        column: hasValidSyllables ? column : 0,
+        chord: syllable.chord
+      });
+    }
+    column += Array.from(syllable.text).length;
+  }
+
+  let end = 0;
+  const positioned = [];
+  for (const placement of placements) {
+    const start = Math.max(placement.column, end ? end + 1 : 0);
+    if (start !== placement.column) {
+      warnings.push(`Section "${sectionName}", line ${lineIndex}: overlapping chords on "${word.text}" are shifted to avoid overlap.`);
+    }
+    positioned.push({ ...placement, column: start });
+    end = start + Array.from(placement.chord).length;
+  }
+  return positioned;
 }
 
 function alignedLyrics(line, warnings, sectionName, lineIndex) {
-  const chords = line.words.map((word) => chordForWord(word, warnings, sectionName, lineIndex));
+  const placements = line.words.map((word) =>
+    chordPlacements(word, warnings, sectionName, lineIndex)
+  );
   const starts = [];
   let column = 0;
   for (const [index, word] of line.words.entries()) {
     starts.push(column);
-    column += Math.max(Array.from(word.text).length, Array.from(chords[index]).length) + 1;
+    const chordWidth = placements[index].reduce(
+      (width, placement) => Math.max(width, placement.column + Array.from(placement.chord).length),
+      0
+    );
+    column += Math.max(Array.from(word.text).length, chordWidth) + 1;
   }
   let chordLine = '';
   let lyricLine = '';
@@ -58,7 +91,10 @@ function alignedLyrics(line, warnings, sectionName, lineIndex) {
     const start = starts[index];
     chordLine = chordLine.padEnd(start, ' ');
     lyricLine = lyricLine.padEnd(start, ' ');
-    chordLine += chords[index];
+    for (const placement of placements[index]) {
+      chordLine = chordLine.padEnd(start + placement.column, ' ');
+      chordLine += placement.chord;
+    }
     lyricLine += word.text;
     if (index < line.words.length - 1) {
       const next = starts[index + 1];
@@ -66,7 +102,9 @@ function alignedLyrics(line, warnings, sectionName, lineIndex) {
       lyricLine = lyricLine.padEnd(next, ' ');
     }
   }
-  return chords.some(Boolean) ? `${chordLine.trimEnd()}\n${lyricLine.trimEnd()}` : lyricLine.trimEnd();
+  return placements.some((wordPlacements) => wordPlacements.length > 0)
+    ? `${chordLine.trimEnd()}\n${lyricLine.trimEnd()}`
+    : lyricLine.trimEnd();
 }
 
 export function exportSongText(input, options = {}) {
@@ -118,11 +156,5 @@ export function exportSongText(input, options = {}) {
     output.push('');
   }
 
-  if (exportSong.sections.some((section) =>
-    section.lines.some((line) => line.type === 'lyrics'
-      && line.words.some((word) => word.syllables.some((syllable) => syllable.chord)))
-  )) {
-    warnings.push('Syllable chords are approximated as word-level chords in plain-text export.');
-  }
   return { text: `${output.join('\n').trimEnd()}\n`, warnings };
 }

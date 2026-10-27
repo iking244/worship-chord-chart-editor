@@ -37,6 +37,28 @@ test('text parser recognizes metadata, named sections, lyric lines, and note lin
   assert.match(warnings[0].message, /chord-only/);
 });
 
+test('text parser creates separate numbered verse and chorus sections', () => {
+  const { song } = parseSongText([
+    '[Verse 1]',
+    'First verse lyrics',
+    '[Chorus 1]',
+    'First chorus lyrics',
+    '[Verse 2]',
+    'Second verse lyrics',
+    '[Chorus 2]',
+    'Second chorus lyrics'
+  ].join('\n'));
+
+  assert.deepEqual(
+    song.sections.map((section) => section.name),
+    ['Verse 1', 'Chorus 1', 'Verse 2', 'Chorus 2']
+  );
+  assert.deepEqual(
+    song.sections.map((section) => section.lines[0].words.map((word) => word.text).join(' ')),
+    ['First verse lyrics', 'First chorus lyrics', 'Second verse lyrics', 'Second chorus lyrics']
+  );
+});
+
 test('parser maps multiple and slash chords by expanded tab and code-point columns', () => {
   const { song, warnings } = parseSongText([
     '[Chorus]',
@@ -119,6 +141,24 @@ test('plain-text output can be parsed back and transposition preserves key mode'
     song.sections[0].lines[0].words.map((word) => word.chord)
   );
   assert.throws(() => exportSongText(song, { key: 'Am' }), /same major or minor mode/);
+});
+
+test('text export places word and syllable chords at their lyric positions', () => {
+  const { song } = parseSongText('[Verse]\nIn troubled times');
+  const words = song.sections[0].lines[0].words;
+  words[0].chord = 'B';
+  words[1].syllables = [
+    { text: 'trou', chord: 'F#' },
+    { text: 'bled', chord: 'C#m7' }
+  ];
+  words[2].chord = 'A';
+
+  const result = exportSongText(song);
+  const lines = result.text.split('\n');
+  const sectionIndex = lines.indexOf('[Verse]');
+  assert.equal(lines[sectionIndex + 1], 'B  F#  C#m7 A');
+  assert.equal(lines[sectionIndex + 2], 'In troubled times');
+  assert.deepEqual(result.warnings, []);
 });
 
 test('parser enforces the import size limit and rejects invalid metadata', () => {

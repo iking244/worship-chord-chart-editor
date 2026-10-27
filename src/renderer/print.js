@@ -11,24 +11,27 @@ function appendText(parent, tagName, className, text) {
 function renderWord(parent, word) {
   const cell = document.createElement('span');
   cell.className = 'print-word';
-  if (word.syllables.length) {
-    appendText(cell, 'span', 'print-chord', word.chord || '');
-    const syllables = document.createElement('span');
-    syllables.className = 'print-syllables';
-    for (const [index, syllable] of word.syllables.entries()) {
-      if (index > 0) {
-        appendText(syllables, 'span', 'print-syllable-separator', '-');
-      }
-      const syllableCell = document.createElement('span');
-      syllableCell.className = 'print-syllable';
-      appendText(syllableCell, 'span', 'print-chord print-syllable-chord', syllable.chord || '');
-      appendText(syllableCell, 'span', 'print-lyric', syllable.text);
-      syllables.append(syllableCell);
+  const syllables = word.syllables.length
+    && word.syllables.map((syllable) => syllable.text).join('') === word.text
+    ? word.syllables
+    : [{ text: word.text, chord: null }];
+
+  for (const [index, syllable] of syllables.entries()) {
+    const chordStack = document.createElement('span');
+    chordStack.className = 'print-chord-stack';
+    if (index === 0 && word.chord) {
+      appendText(chordStack, 'span', 'print-chord', word.chord);
     }
-    cell.append(syllables);
-  } else {
-    appendText(cell, 'span', 'print-chord', word.chord || '');
-    appendText(cell, 'span', 'print-lyric', word.text);
+    if (syllable.chord) {
+      appendText(chordStack, 'span', 'print-chord print-syllable-chord', syllable.chord);
+    }
+    chordStack.style.gridRow = '1';
+    chordStack.style.gridColumn = String(index + 1);
+    cell.append(chordStack);
+
+    const lyric = appendText(cell, 'span', 'print-lyric', syllable.text);
+    lyric.style.gridRow = '2';
+    lyric.style.gridColumn = String(index + 1);
   }
   parent.append(cell);
 }

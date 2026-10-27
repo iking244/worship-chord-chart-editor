@@ -61,13 +61,13 @@ The app includes a local song library, metadata editor, and a structured chart e
 - Parsing is pure shared JavaScript. It recognizes documented metadata fields, bracketed custom section labels, common bare headings, `>` note lines, chord-only lines, and chord rows aligned over lyrics.
 - Four-column tab stops and Unicode code-point columns are used for chord-to-word mapping. Ambiguous nearest-word assignments, duplicate chord placements, unpaired chord lines, and Unicode display-width uncertainty are reported in a review dialog.
 - Import shows a title field, parsed section/line preview, and diagnostics. Nothing is saved until the user confirms; the resulting song is then saved through the validated song-store IPC.
-- Text export is deterministic, uses a non-overlapping monospace column layout, preserves supported metadata and line types, warns on long/Unicode lines and syllable-chord approximation, and can transpose a copy to a selected key without changing the stored song.
+- Text export is deterministic, uses a non-overlapping monospace column layout, preserves supported metadata and line types, aligns word and syllable chords with their lyric positions, warns on long/Unicode lines, and can transpose a copy to a selected key without changing the stored song.
 - The library filters by title and performer and supports main-process song duplication. The duplicate operation completes before the library refreshes.
 - The exact supported syntax and alignment policy are in [PLAIN-TEXT-FORMAT.md](./PLAIN-TEXT-FORMAT.md).
 
 ### Phase 5 — PDF and printing
 
-- A separate local print document renders a single validated song with DOM text nodes and no editor controls, preload bridge, Node integration, or remote assets.
+- A separate local print document renders a single validated song with DOM text nodes and no editor controls, preload bridge, Node integration, or remote assets. Syllables remain visually joined as whole words in PDF/print output while their chords align over the appropriate parts.
 - Print options include A4 or Letter, portrait or landscape, 8–24 pt font, optional metadata/notes, and an optional target key. Main-process validation rejects out-of-range options.
 - PDF export uses a hidden isolated `BrowserWindow`, waits for the print renderer's fonts and layout, calls Electron `webContents.printToPDF()`, and atomically writes the resulting PDF bytes only after the user chooses a destination.
 - Native printing is a separate `webContents.print()` operation that shows the OS print dialog by default. Print/PDF operations are serialized, and temporary print windows are closed in `finally` paths.

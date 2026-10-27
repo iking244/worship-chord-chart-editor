@@ -69,6 +69,14 @@ h2 {
   white-space: pre;
 }
 
+.print-chord-stack {
+  display: flex;
+  min-height: 1.2em;
+  flex-direction: column;
+  align-items: start;
+  justify-content: end;
+}
+
 .print-chord {
   min-height: 1.2em;
   color: #111;
@@ -78,22 +86,6 @@ h2 {
 
 .print-lyric {
   font-size: 1.12em;
-}
-
-.print-syllables {
-  display: inline-flex;
-  align-items: end;
-}
-
-.print-syllable {
-  display: inline-grid;
-  grid-template-rows: 1.2em auto;
-  justify-items: center;
-}
-
-.print-syllable-separator {
-  align-self: end;
-  padding-bottom: 0.1em;
 }
 
 .print-syllable-chord {
